@@ -44,7 +44,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
         /// <summary>
         /// Bitmap to display xxxxxxxxxxx
         /// </summary>
-        private WriteableBitmap depthBitmap = null;
+        public WriteableBitmap depthBitmap = null;
 
         /// <summary>
         /// Intermediate storage for frame data converted to color

@@ -15,7 +15,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
 
         //server : chose the port
         public static HttpListener listener;
-        public static string url = "http://localhost:2021/";
+        public static string url = "http://192.168.1.54:2021/";
         public static int pageViews = 0;
         public static int requestCount = 0;
 
@@ -52,12 +52,27 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                 }
 
                 // If `depthsensor` url requested w/ GET, then send depth sensor informations
-                if ((req.HttpMethod == "GET") && (req.Url.AbsolutePath == "/depthsensor/data"))
+                if ((req.HttpMethod == "GET") && (req.Url.AbsolutePath == "/depthsensor"))
                 {
                     Console.WriteLine("Depth informations requested");
 
                     // Write the response info
-                    byte[] data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(fenetreKinectLocal.curentFrame));
+                    var dataJson = new dataJson
+                    {
+                        Largeur = fenetreKinectLocal.depthBitmap.PixelWidth,
+                        Hauteur = fenetreKinectLocal.depthBitmap.PixelHeight,
+                        Data = fenetreKinectLocal.curentFrame
+                    };
+                    byte[] data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dataJson));
+
+                    //byte[] addDebut = Encoding.UTF8.GetBytes("{\"data\":");
+                    //byte[] addFin = Encoding.UTF8.GetBytes("}");
+                    //byte[] json = new byte[data.Length + addDebut.Length + addFin.Length +1];
+
+                    //System.Array.Copy(addDebut, json, json.Length);
+                    ///System.Array.Copy(data, json, data.Length);
+                    //System.Array.Copy(addFin, json, addFin.Length);
+
                     resp.ContentType = "application/json";
                     resp.ContentEncoding = Encoding.UTF8;
                     resp.ContentLength64 = data.LongLength;
@@ -101,6 +116,14 @@ namespace Microsoft.Samples.Kinect.DepthBasics
             Console.WriteLine("Listening for connections on {0}", url);
 
             await HandleIncomingConnections();
+        }
+
+        public class dataJson
+        {
+            public int Largeur { get; set; }
+            public int Hauteur { get; set; }
+            public ushort[] Data { get; set; }
+
         }
     }
 }
