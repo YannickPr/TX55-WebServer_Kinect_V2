@@ -66,7 +66,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
 
             // get the kinectSensor object
             this.kinectSensor = KinectSensor.GetDefault();
-
+            
             // open the reader for the depth frames
             this.depthFrameReader = this.kinectSensor.DepthFrameSource.OpenReader();
 
