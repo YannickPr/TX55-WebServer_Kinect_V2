@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 using System.IO.Ports;
+using System.Threading;
 
 namespace Microsoft.Samples.Kinect.DepthBasics
 {
@@ -72,18 +73,26 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                         //Console.WriteLine("End of client data:");
                         body.Close();
                         reader.Close();
-                        RobotJson robotJson = JsonSerializer.Deserialize<RobotJson>(stringRequest);
-                        Console.WriteLine($"data recu : {robotJson.Message}");
-
-                        _serialPort.WriteLine(robotJson.Message);
-
-
-                        // Write the response info
-                        var retourRobotJson = new RetourRobotJson
+                        //RobotJson robotJson = JsonSerializer.Deserialize<RobotJson>(stringRequest);
+                        Console.WriteLine($"data recu : >{stringRequest}<");
+                        _serialPort.WriteLine(stringRequest);
+                        
+                        /*while (_serialPort.BytesToRead < 10)
                         {
-                            estOk = true
-                        };
-                        byte[] data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(retourRobotJson));
+                            Console.WriteLine($"BytesToRead : >{_serialPort.BytesToRead}<");
+                        }*/
+                        string messageRobot = "{\"statut\":false}";
+                        try
+                        {
+                            messageRobot = _serialPort.ReadLine();
+                            Console.WriteLine($"reponse du robot recu : >{messageRobot}<");
+                        }
+                        catch (TimeoutException) { }
+
+                        byte[] data = Encoding.UTF8.GetBytes(messageRobot);
+                        resp.ContentType = "application/json";
+                        resp.ContentEncoding = Encoding.UTF8;
+                        resp.ContentLength64 = data.LongLength;
                         await resp.OutputStream.WriteAsync(data, 0, data.Length);
                     }
                 }
@@ -101,14 +110,6 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                         Data = fenetreKinectLocal.curentFrame
                     };
                     byte[] data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dataJson));
-
-                    //byte[] addDebut = Encoding.UTF8.GetBytes("{\"data\":");
-                    //byte[] addFin = Encoding.UTF8.GetBytes("}");
-                    //byte[] json = new byte[data.Length + addDebut.Length + addFin.Length +1];
-
-                    //System.Array.Copy(addDebut, json, json.Length);
-                    ///System.Array.Copy(data, json, data.Length);
-                    //System.Array.Copy(addFin, json, addFin.Length);
 
                     resp.ContentType = "application/json";
                     resp.ContentEncoding = Encoding.UTF8;
@@ -129,17 +130,17 @@ namespace Microsoft.Samples.Kinect.DepthBasics
             _serialPort = new SerialPort();
             _serialPort.PortName = "COM8";
             _serialPort.BaudRate = 9600;
-            //_serialPort.Parity = Parity.None; //Parity : None = 0,  Even = 2,  Mark = 3,  Space = 4
+            _serialPort.Parity = Parity.None; //Parity : None = 0,  Even = 2,  Mark = 3,  Space = 4
             _serialPort.DataBits = 8;
             _serialPort.StopBits = StopBits.One; //StopBits : None = 0,  One = 1,  Two = 2,  OnePointFive = 3
-            //_serialPort.Handshake = Handshake.None; // Handshake : None = 0,  XOnXOff = 1,  RequestToSend = 2,  RequestToSendXOnXOff = 3
+            _serialPort.Handshake = Handshake.None; // Handshake : None = 0,  XOnXOff = 1,  RequestToSend = 2,  RequestToSendXOnXOff = 3
+            _serialPort.DtrEnable = true;
 
             // Set the read/write timeouts
             _serialPort.ReadTimeout = 500;
             _serialPort.WriteTimeout = 500;
 
             _serialPort.Open();
-
 
             listener = new HttpListener();
             listener.Prefixes.Add(url);
