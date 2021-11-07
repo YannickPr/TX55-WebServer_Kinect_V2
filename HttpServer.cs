@@ -69,25 +69,32 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                         //Console.WriteLine("Start of client data:");
                         // Convert the data to a string and display it on the console.
                         string stringRequest = reader.ReadToEnd();
+                        stringRequest = stringRequest.Replace("\r", "").Replace("\t", "").Replace("\n", "").Replace(" ", "");
                         //Console.WriteLine(stringRequest);
                         //Console.WriteLine("End of client data:");
                         body.Close();
                         reader.Close();
                         //RobotJson robotJson = JsonSerializer.Deserialize<RobotJson>(stringRequest);
                         Console.WriteLine($"data recu : >{stringRequest}<");
-                        _serialPort.WriteLine(stringRequest);
-                        
-                        /*while (_serialPort.BytesToRead < 10)
+                        _serialPort.WriteLine($"{stringRequest}\r");
+
+
+                        while (_serialPort.BytesToRead > 0)
                         {
-                            Console.WriteLine($"BytesToRead : >{_serialPort.BytesToRead}<");
-                        }*/
-                        string messageRobot = "{\"statut\":false}";
-                        try
+                            //Console.Write(_serialPort.ReadChar());
+                            try
+                            {
+                                Console.WriteLine($"reponse du robot recu : >{_serialPort.ReadLine()}<");
+                            }
+                            catch (TimeoutException) { }
+                        }
+                        string messageRobot = "{\"statut\":ok}";
+                        /*try
                         {
                             messageRobot = _serialPort.ReadLine();
                             Console.WriteLine($"reponse du robot recu : >{messageRobot}<");
                         }
-                        catch (TimeoutException) { }
+                        catch (TimeoutException) { }*/
 
                         byte[] data = Encoding.UTF8.GetBytes(messageRobot);
                         resp.ContentType = "application/json";
@@ -128,7 +135,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
             fenetreKinectLocal = fenetreKinect;
 
             _serialPort = new SerialPort();
-            _serialPort.PortName = "COM8";
+            _serialPort.PortName = "COM13";
             _serialPort.BaudRate = 9600;
             _serialPort.Parity = Parity.None; //Parity : None = 0,  Even = 2,  Mark = 3,  Space = 4
             _serialPort.DataBits = 8;
