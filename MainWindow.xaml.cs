@@ -65,6 +65,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
         public int Hmax = 423;
         public int Lmin = 0;
         public int Lmax = 511;
+        public int Simp = 2;
 
         public int Htotal = 424;
         public int Ltotal = 512;
@@ -242,8 +243,9 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                             //Save the frame, to be accessed from the server
 
                             depthFrame.CopyFrameDataToArray(curentFrame);
-                            int largeur = Lmax - Lmin;
-                            int nbVal = (largeur) * (Hmax - Hmin);
+                            int largeur = (Lmax - Lmin)/Simp;
+                            int nbVal = (largeur) * (Hmax - Hmin)/Simp;
+                            
 
                             frameCuted2 = frameCuted1; //bug ?
                             frameCuted1 = frameCuted0; //bug ?
@@ -252,7 +254,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
 
                             for(int i = 0; i < nbVal; i++)
                             {
-                                int indiceFrame = Ltotal * (Hmin + i / largeur) + Lmin + i % largeur;
+                                int indiceFrame = Ltotal * (Hmin + i / largeur * Simp) + Lmin + (i % largeur) * Simp;
                                 frameCuted0[i] = curentFrame[indiceFrame];
                                 //Console.WriteLine($"loop : indice {i} --> {indiceFrame} lecture de {");
                             }

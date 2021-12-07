@@ -126,7 +126,8 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                         fenetreKinectLocal.Hmin = Math.Max(paramJson.Hmin,0);
                         fenetreKinectLocal.Hmax = Math.Min(paramJson.Hmax,423);
                         fenetreKinectLocal.Lmin = Math.Max(paramJson.Lmin,0);
-                        fenetreKinectLocal.Lmax = Math.Min(paramJson.Lmax,511);
+                        fenetreKinectLocal.Lmax = Math.Min(paramJson.Lmax, 511);
+                        fenetreKinectLocal.Simp = Math.Max(paramJson.Simp, 1);
 
                         Console.WriteLine($"lecture de lmin : >{fenetreKinectLocal.Lmin}<");
 
@@ -179,12 +180,13 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                     Console.WriteLine("Depth informations requested");
 
                     ushort[] frameMoy;
-                    int nbval = (fenetreKinectLocal.Lmax - fenetreKinectLocal.Lmin) * (fenetreKinectLocal.Hmax - fenetreKinectLocal.Hmin);
+                    int nbval = (fenetreKinectLocal.Lmax - fenetreKinectLocal.Lmin) * (fenetreKinectLocal.Hmax - fenetreKinectLocal.Hmin) / fenetreKinectLocal.Simp;
                     frameMoy = new ushort[nbval];
                     
                     for(int i = 0; i< nbval; i++)
                     {
-                        frameMoy[1] = (ushort)((fenetreKinectLocal.frameCuted0[i] + fenetreKinectLocal.frameCuted1[i] + fenetreKinectLocal.frameCuted2[i])/3);
+                        frameMoy[1] = (ushort)((fenetreKinectLocal.frameCuted0[i] + fenetreKinectLocal.frameCuted1[i] + fenetreKinectLocal.frameCuted2[i])
+                                                /(fenetreKinectLocal.frameCuted0[i]!=0?1:0 + fenetreKinectLocal.frameCuted1[i] != 0?1:0 + fenetreKinectLocal.frameCuted2[i] != 0?1:0));
                     }
                     // Write the response info
                     var dataJson = new dataJson
@@ -242,6 +244,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
             public int Hmax { get; set; }
             public int Lmin { get; set; }
             public int Lmax { get; set; }
+            public int Simp { get; set; }
         }
     }
 }
