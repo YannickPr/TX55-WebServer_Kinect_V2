@@ -17,6 +17,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
 
         //server : chose the port
         public static HttpListener listener;
+        //public static string url = "http://192.168.1.39:2021/";   //box
         public static string url = "http://192.168.1.39:2021/";
         public static int pageViews = 0;
         public static int requestCount = 0;
@@ -29,7 +30,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
             // While a user hasn't visited the `shutdown` url, keep on handling requests
             while (runServer)
             {
-                Console.WriteLine("Waiting for a request...");
+                //Console.WriteLine("Waiting for a request...");
 
                 // Will wait here until we hear from a connection
                 HttpListenerContext ctx = await listener.GetContextAsync();
@@ -39,19 +40,19 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                 HttpListenerResponse resp = ctx.Response;
 
                 // Print out some info about the request
-                Console.WriteLine("Request #: {0}", ++requestCount);
+                //Console.WriteLine("Request #: {0}", ++requestCount);
                 Console.WriteLine(req.Url.ToString());
-                Console.WriteLine(req.HttpMethod);
-                Console.WriteLine(req.UserHostName);
-                Console.WriteLine(req.UserAgent);
-                Console.WriteLine();
+                //Console.WriteLine(req.HttpMethod);
+                //Console.WriteLine(req.UserHostName);
+                //Console.WriteLine(req.UserAgent);
+                ///Console.WriteLine();
 
                 // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
-                if ((req.HttpMethod == "POST") && (req.Url.AbsolutePath == "/shutdown"))
+                /*if ((req.HttpMethod == "POST") && (req.Url.AbsolutePath == "/shutdown"))
                 {
                     Console.WriteLine("Shutdown requested");
                     runServer = false;
-                }
+                }*/
 
                 // If `robot` url requested w/ POST, then send informations to the robot via serial port
                 if ((req.HttpMethod == "POST") && (req.Url.AbsolutePath == "/robot"))
@@ -104,17 +105,91 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                     }
                 }
 
+
+                if ((req.HttpMethod == "POST") && (req.Url.AbsolutePath == "/param"))
+                {
+                    if (req.HasEntityBody)
+                    {
+                        System.IO.Stream body = req.InputStream;
+                        System.Text.Encoding encoding = req.ContentEncoding;
+                        System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
+
+                        // Convert the data to a string and display it on the console.
+                        string stringRequest = reader.ReadToEnd();
+                        body.Close();
+                        reader.Close();
+
+                        stringRequest = stringRequest.Replace("\r", "").Replace("\t", "").Replace("\n", "").Replace(" ", "");
+                        ParamJson paramJson = JsonSerializer.Deserialize<ParamJson>(stringRequest);
+                        Console.WriteLine($"data recu : {stringRequest}");
+
+                        fenetreKinectLocal.Hmin = Math.Max(paramJson.Hmin,0);
+                        fenetreKinectLocal.Hmax = Math.Min(paramJson.Hmax,423);
+                        fenetreKinectLocal.Lmin = Math.Max(paramJson.Lmin,0);
+                        fenetreKinectLocal.Lmax = Math.Min(paramJson.Lmax,511);
+
+                        Console.WriteLine($"lecture de lmin : >{fenetreKinectLocal.Lmin}<");
+
+                        string messageRobot = "{\"Latence\":5}"; //modifier ici !
+
+
+
+                        byte[] data = Encoding.UTF8.GetBytes(messageRobot);
+                        resp.ContentType = "application/json";
+                        resp.ContentEncoding = Encoding.UTF8;
+                        resp.ContentLength64 = data.LongLength;
+                        await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                    }
+                }
+
+                if ((req.HttpMethod == "POST") && (req.Url.AbsolutePath == "/log"))
+                {
+                    if (req.HasEntityBody)
+                    {
+                        System.IO.Stream body = req.InputStream;
+                        System.Text.Encoding encoding = req.ContentEncoding;
+                        System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
+                        if (req.ContentType != null)
+                        {
+                            //Console.WriteLine("Client data content type {0}", req.ContentType);
+                        }
+
+                        string stringRequest = reader.ReadToEnd();
+                        stringRequest = stringRequest.Replace("\r", "").Replace("\t", "").Replace("\n", "").Replace(" ", "");
+
+                        body.Close();
+                        reader.Close();
+
+                        Console.WriteLine($"     log from headset : >{stringRequest}<");
+
+                        string messageLog = "{\"statut\":ok}";
+
+                        byte[] data = Encoding.UTF8.GetBytes(messageLog);
+                        resp.ContentType = "application/json";
+                        resp.ContentEncoding = Encoding.UTF8;
+                        resp.ContentLength64 = data.LongLength;
+                        await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                    }
+                }
+
+
                 // If `depthsensor` url requested w/ GET, then send depth sensor informations
                 if ((req.HttpMethod == "GET") && (req.Url.AbsolutePath == "/depthsensor"))
                 {
                     Console.WriteLine("Depth informations requested");
 
+                    ushort[] frameMoy;
+                    int nbval = (fenetreKinectLocal.Lmax - fenetreKinectLocal.Lmin) * (fenetreKinectLocal.Hmax - fenetreKinectLocal.Hmin);
+                    frameMoy = new ushort[nbval];
+                    
+                    for(int i = 0; i< nbval; i++)
+                    {
+                        frameMoy[1] = (ushort)((fenetreKinectLocal.frameCuted0[i] + fenetreKinectLocal.frameCuted1[i] + fenetreKinectLocal.frameCuted2[i])/3);
+                    }
                     // Write the response info
                     var dataJson = new dataJson
                     {
-                        Largeur = fenetreKinectLocal.depthBitmap.PixelWidth,
-                        Hauteur = fenetreKinectLocal.depthBitmap.PixelHeight,
-                        Data = fenetreKinectLocal.curentFrame
+                        Data = fenetreKinectLocal.frameCuted0
                     };
                     byte[] data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dataJson));
 
@@ -159,17 +234,14 @@ namespace Microsoft.Samples.Kinect.DepthBasics
 
         public class dataJson
         {
-            public int Largeur { get; set; }
-            public int Hauteur { get; set; }
             public ushort[] Data { get; set; }
         }
-        public class RobotJson
+        public class ParamJson
         {
-            public string Message { get; set; }
-        }
-        public class RetourRobotJson
-        {
-            public bool estOk { get; set; }
+            public int Hmin { get; set; }
+            public int Hmax { get; set; }
+            public int Lmin { get; set; }
+            public int Lmax { get; set; }
         }
     }
 }

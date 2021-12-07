@@ -57,6 +57,18 @@ namespace Microsoft.Samples.Kinect.DepthBasics
         private string statusText = null;
 
         public ushort[] curentFrame;
+        public ushort[] frameCuted0;
+        public ushort[] frameCuted1;
+        public ushort[] frameCuted2;
+
+        public int Hmin = 0;
+        public int Hmax = 423;
+        public int Lmin = 0;
+        public int Lmax = 511;
+
+        public int Htotal = 424;
+        public int Ltotal = 512;
+
 
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
@@ -230,6 +242,22 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                             //Save the frame, to be accessed from the server
 
                             depthFrame.CopyFrameDataToArray(curentFrame);
+                            int largeur = Lmax - Lmin;
+                            int nbVal = (largeur) * (Hmax - Hmin);
+
+                            frameCuted2 = frameCuted1; //bug ?
+                            frameCuted1 = frameCuted0; //bug ?
+
+                            frameCuted0 = new ushort[nbVal];
+
+                            for(int i = 0; i < nbVal; i++)
+                            {
+                                int indiceFrame = Ltotal * (Hmin + i / largeur) + Lmin + i % largeur;
+                                frameCuted0[i] = curentFrame[indiceFrame];
+                                //Console.WriteLine($"loop : indice {i} --> {indiceFrame} lecture de {");
+                            }
+
+
 
                             // Note: In order to see the full range of depth (including the less reliable far field depth)
                             // we are setting maxDepth to the extreme potential depth threshold
