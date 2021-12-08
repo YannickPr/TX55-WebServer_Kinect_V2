@@ -60,15 +60,27 @@ namespace Microsoft.Samples.Kinect.DepthBasics
         public ushort[] frameCuted0;
         public ushort[] frameCuted1;
         public ushort[] frameCuted2;
-
+        public ushort[] frameCuted3;
+        /*
+        public int Hmin = 1;
+        public int Hmax = 6;
+        public int Lmin = 1;
+        public int Lmax = 6;
+        public int Simp = 2;*/
         public int Hmin = 0;
         public int Hmax = 423;
         public int Lmin = 0;
         public int Lmax = 511;
-        public int Simp = 2;
+        public int Simp = 4;
 
         public int Htotal = 424;
         public int Ltotal = 512;
+
+        public int largeur;
+        public int nbVal;
+
+
+
 
 
         /// <summary>
@@ -243,18 +255,23 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                             //Save the frame, to be accessed from the server
 
                             depthFrame.CopyFrameDataToArray(curentFrame);
-                            int largeur = (Lmax - Lmin)/Simp;
-                            int nbVal = (largeur) * (Hmax - Hmin)/Simp;
-                            
+                            largeur = (Lmax - Lmin + 1);
+                            nbVal = ((largeur + Simp / 2) / Simp) * ((Hmax - Hmin + 1 + Simp / 2) / Simp);
 
+                            frameCuted3 = frameCuted2;
                             frameCuted2 = frameCuted1; //bug ?
                             frameCuted1 = frameCuted0; //bug ?
-
+                            
                             frameCuted0 = new ushort[nbVal];
 
                             for(int i = 0; i < nbVal; i++)
                             {
-                                int indiceFrame = Ltotal * (Hmin + i / largeur * Simp) + Lmin + (i % largeur) * Simp;
+                                //int indiceFrame = Ltotal * (Hmin + i * Simp / largeur) + Lmin + (i % (largeur/Simp)) * Simp;
+                                //                                          
+                                int indiceFrame = Ltotal * Hmin //lignes init
+                                                + Ltotal * (i / ((largeur+1)/Simp))* Simp   //lignes faites
+                                                + Lmin 
+                                                + ( i ) % ((largeur + Simp / 2) / Simp)* Simp; //début ligne
                                 frameCuted0[i] = curentFrame[indiceFrame];
                                 //Console.WriteLine($"loop : indice {i} --> {indiceFrame} lecture de {");
                             }

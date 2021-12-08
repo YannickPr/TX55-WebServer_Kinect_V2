@@ -121,7 +121,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
 
                         stringRequest = stringRequest.Replace("\r", "").Replace("\t", "").Replace("\n", "").Replace(" ", "");
                         ParamJson paramJson = JsonSerializer.Deserialize<ParamJson>(stringRequest);
-                        Console.WriteLine($"data recu : {stringRequest}");
+                        Console.WriteLine($"requete parm : {stringRequest}");
 
                         fenetreKinectLocal.Hmin = Math.Max(paramJson.Hmin,0);
                         fenetreKinectLocal.Hmax = Math.Min(paramJson.Hmax,423);
@@ -180,18 +180,19 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                     Console.WriteLine("Depth informations requested");
 
                     ushort[] frameMoy;
-                    int nbval = (fenetreKinectLocal.Lmax - fenetreKinectLocal.Lmin) * (fenetreKinectLocal.Hmax - fenetreKinectLocal.Hmin) / fenetreKinectLocal.Simp;
-                    frameMoy = new ushort[nbval];
+                    int _nbval = fenetreKinectLocal.nbVal;
+                    frameMoy = new ushort[_nbval];
                     
-                    for(int i = 0; i< nbval; i++)
+                    for(int i = 0; i< _nbval; i++)
                     {
-                        frameMoy[1] = (ushort)((fenetreKinectLocal.frameCuted0[i] + fenetreKinectLocal.frameCuted1[i] + fenetreKinectLocal.frameCuted2[i])
-                                                /(fenetreKinectLocal.frameCuted0[i]!=0?1:0 + fenetreKinectLocal.frameCuted1[i] != 0?1:0 + fenetreKinectLocal.frameCuted2[i] != 0?1:0));
+                        int nbval = Math.Max(((fenetreKinectLocal.frameCuted0[i] != 0 ? 1 : 0) + (fenetreKinectLocal.frameCuted1[i] != 0 ? 1 : 0) + (fenetreKinectLocal.frameCuted2[i] != 0 ? 1 : 0) + (fenetreKinectLocal.frameCuted3[i] != 0 ? 1 : 0)), 1);
+                        frameMoy[i] = (ushort)((fenetreKinectLocal.frameCuted0[i] + fenetreKinectLocal.frameCuted1[i] + fenetreKinectLocal.frameCuted2[i] + fenetreKinectLocal.frameCuted3[i])
+                                                / nbval);
                     }
                     // Write the response info
                     var dataJson = new dataJson
                     {
-                        Data = fenetreKinectLocal.frameCuted0
+                        Data = frameMoy //fenetreKinectLocal.frameCuted0
                     };
                     byte[] data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dataJson));
 
