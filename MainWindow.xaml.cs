@@ -67,11 +67,11 @@ namespace Microsoft.Samples.Kinect.DepthBasics
         public int Lmin = 1;
         public int Lmax = 6;
         public int Simp = 2;*/
-        public int Hmin = 0;
+        public int Hmin = 92;
         public int Hmax = 423;
-        public int Lmin = 0;
-        public int Lmax = 511;
-        public int Simp = 4;
+        public int Lmin = 155;
+        public int Lmax = 407;
+        public int Simp = 2;
 
         public int Htotal = 424;
         public int Ltotal = 512;

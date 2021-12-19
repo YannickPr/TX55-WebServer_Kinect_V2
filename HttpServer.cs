@@ -131,7 +131,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
 
                         Console.WriteLine($"lecture de lmin : >{fenetreKinectLocal.Lmin}<");
 
-                        string messageRobot = "{\"Latence\":5}"; //modifier ici !
+                        string messageRobot = "{\"Latence\":2}"; //modifier ici !
 
 
 
