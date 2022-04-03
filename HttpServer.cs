@@ -54,57 +54,6 @@ namespace Microsoft.Samples.Kinect.DepthBasics
                     runServer = false;
                 }*/
 
-                // If `robot` url requested w/ POST, then send informations to the robot via serial port
-                if ((req.HttpMethod == "POST") && (req.Url.AbsolutePath == "/robot"))
-                {
-                    if (req.HasEntityBody)
-                    {
-                        System.IO.Stream body = req.InputStream;
-                        System.Text.Encoding encoding = req.ContentEncoding;
-                        System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
-                        if (req.ContentType != null)
-                        {
-                            //Console.WriteLine("Client data content type {0}", req.ContentType);
-                        }
-                        //Console.WriteLine("Client data content length {0}", req.ContentLength64);
-                        //Console.WriteLine("Start of client data:");
-                        // Convert the data to a string and display it on the console.
-                        string stringRequest = reader.ReadToEnd();
-                        stringRequest = stringRequest.Replace("\r", "").Replace("\t", "").Replace("\n", "").Replace(" ", "");
-                        //Console.WriteLine(stringRequest);
-                        //Console.WriteLine("End of client data:");
-                        body.Close();
-                        reader.Close();
-                        //RobotJson robotJson = JsonSerializer.Deserialize<RobotJson>(stringRequest);
-                        Console.WriteLine($"data recu : >{stringRequest}<");
-                        _serialPort.WriteLine($"{stringRequest}\r");
-
-
-                        while (_serialPort.BytesToRead > 0)
-                        {
-                            //Console.Write(_serialPort.ReadChar());
-                            try
-                            {
-                                Console.WriteLine($"reponse du robot recu : >{_serialPort.ReadLine()}<");
-                            }
-                            catch (TimeoutException) { }
-                        }
-                        string messageRobot = "{\"statut\":ok}";
-                        /*try
-                        {
-                            messageRobot = _serialPort.ReadLine();
-                            Console.WriteLine($"reponse du robot recu : >{messageRobot}<");
-                        }
-                        catch (TimeoutException) { }*/
-
-                        byte[] data = Encoding.UTF8.GetBytes(messageRobot);
-                        resp.ContentType = "application/json";
-                        resp.ContentEncoding = Encoding.UTF8;
-                        resp.ContentLength64 = data.LongLength;
-                        await resp.OutputStream.WriteAsync(data, 0, data.Length);
-                    }
-                }
-
 
                 if ((req.HttpMethod == "POST") && (req.Url.AbsolutePath == "/param"))
                 {
@@ -211,7 +160,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
         public async static Task setupServer(MainWindow fenetreKinect)
         {
             fenetreKinectLocal = fenetreKinect;
-
+            /*
             _serialPort = new SerialPort();
             _serialPort.PortName = "COM13";
             _serialPort.BaudRate = 9600;
@@ -226,6 +175,7 @@ namespace Microsoft.Samples.Kinect.DepthBasics
             _serialPort.WriteTimeout = 500;
 
             _serialPort.Open();
+            */
 
             listener = new HttpListener();
             listener.Prefixes.Add(url);
